@@ -404,7 +404,44 @@ For issues and questions:
 ## License
 
 This project is provided as-is for educational and demonstration purposes.
-## OpenAPI / Swagger JSON Vertical
+## Creating Custom Verticals
+
+### Document Vertical
+
+To create a dedicated vertical for documents (PDFs, DOCX, PPTX, TXT, MD, etc.) with optimal chunking and semantic search:
+
+```powershell
+# Create vertical with document-optimized settings
+python main.py create_vertical --prefix doc --container your-documents-container
+
+# Example with specific container:
+python main.py create_vertical --prefix score-operatorsupport-docs --container ctg-csa-agent-score-operatorsupport
+```
+
+**What this creates:**
+- **Data Source**: `ds-doc` (connects to your blob container)
+- **Skillset**: `ss-doc` (includes OCR, text splitting with 2000 token chunks, 100 token overlap, and vectorization)
+- **Index**: `idx-doc` (searchable index with vector embeddings and semantic configuration)
+- **Indexer**: `ix-doc` (automatically processes documents)
+
+**Semantic configuration** enables:
+- Semantic ranking for better result quality
+- Captions extraction from relevant passages
+- Direct answer generation from documents
+
+**Next steps:**
+1. Upload your documents to the specified blob container
+2. Monitor indexing progress:
+   ```powershell
+   python main.py indexer-status ix-doc
+   ```
+3. Re-run if needed:
+   ```powershell
+   python main.py run-indexer ix-doc
+   ```
+4. Add the index as a knowledge source in Copilot Studio
+
+### OpenAPI / Swagger JSON Vertical
 
 To ingest OpenAPI chunks:
 1. Upload your chunk `.txt` files to the JSON container (e.g. `pp-portal-navi-json`).

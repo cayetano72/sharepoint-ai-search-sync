@@ -312,6 +312,28 @@ class AzureSearchIntegratedVectorization:
                         }
                     }
                 ]
+            },
+            "semantic": {
+                "configurations": [
+                    {
+                        "name": "default-semantic-config",
+                        "prioritizedFields": {
+                            "titleField": {
+                                "fieldName": "title"
+                            },
+                            "prioritizedContentFields": [
+                                {
+                                    "fieldName": "content"
+                                }
+                            ],
+                            "prioritizedKeywordsFields": [
+                                {
+                                    "fieldName": "file_extension"
+                                }
+                            ]
+                        }
+                    }
+                ]
             }
         }
         
