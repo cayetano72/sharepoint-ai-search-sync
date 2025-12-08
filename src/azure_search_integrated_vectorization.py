@@ -109,6 +109,7 @@ class AzureSearchIntegratedVectorization:
         - Integrated vectorization STILL requires an embedding skill at indexing time; just adding a vector field + vectorizer does NOT populate vectors.
         - We chunk (page-based) to avoid token overflows; for now we embed ONLY the first chunk to keep design simple. This can be extended to per-chunk projections later.
         - Output targetName must match the index field (content_vector).
+        - Empty files should be excluded at indexer level (not handled in skillset).
         """
         logger.info(f"Creating skillset: {name}")
 
@@ -164,6 +165,7 @@ class AzureSearchIntegratedVectorization:
 
         Strategy: No splitting – embed truncated raw content (first N characters) to keep vector focused.
         (Future enhancement: parse & restructure OpenAPI parts before embedding.)
+        Empty files excluded at indexer level.
         """
         logger.info(f"Creating JSON skillset: {name}")
         skills: List[Dict[str, Any]] = [
@@ -366,13 +368,17 @@ class AzureSearchIntegratedVectorization:
             "targetIndexName": index_name,
             "skillsetName": skillset_name,
             "parameters": {
+                "batchSize": 10,
+                "maxFailedItems": -1,
+                "maxFailedItemsPerBatch": -1,
                 "configuration": {
                     "dataToExtract": "contentAndMetadata",
                     "parsingMode": parsing_mode,
                     "indexedFileNameExtensions": indexed_extensions,
                     "excludedFileNameExtensions": excluded_extensions,
                     "failOnUnsupportedContentType": False,
-                    "failOnUnprocessableDocument": False
+                    "failOnUnprocessableDocument": False,
+                    "indexStorageMetadataOnlyForOversizedDocuments": False
                 }
             },
             "fieldMappings": [
@@ -526,10 +532,10 @@ class AzureSearchIntegratedVectorization:
         """
         import datetime, random
         suffix = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S") + f"{random.randint(100,999)}"
-        ds_name = f"ds-{prefix}-{suffix}"[:60]
-        idx_name = f"idx-{prefix}-{suffix}"[:60]
-        ss_name = f"ss-{prefix}-{suffix}"[:60]
-        ix_name = f"ix-{prefix}-{suffix}"[:60]
+        ds_name = f"{prefix}-{suffix}-ds"[:60]
+        idx_name = f"{prefix}-{suffix}-idx"[:60]
+        ss_name = f"{prefix}-{suffix}-ss"[:60]
+        ix_name = f"{prefix}-{suffix}-ix"[:60]
 
         logger.info(f"Creating quick test resources: {ds_name}, {idx_name}, {ss_name}, {ix_name}")
 
@@ -561,7 +567,7 @@ class AzureSearchIntegratedVectorization:
         """Create or update a vertical (data source, skillset, index, indexer).
 
         You may specify explicit names; otherwise names are derived from prefix:
-            ds-{prefix}, ss-{prefix}, idx-{prefix}, ix-{prefix}
+            {prefix}-ds, {prefix}-ss, {prefix}-idx, {prefix}-ix
 
         Parameters:
             prefix: Base prefix (sanitized) for fallback names.
@@ -575,10 +581,10 @@ class AzureSearchIntegratedVectorization:
         # When creating only the JSON vertical, skip base resources entirely
         if json_only:
             json_suffix = f"{safe}-json"
-            json_ds = f"ds-{json_suffix}"
-            json_ss = f"ss-{json_suffix}"
-            json_idx = f"idx-{json_suffix}"
-            json_ix = f"ix-{json_suffix}"
+            json_ds = f"{json_suffix}-ds"
+            json_ss = f"{json_suffix}-ss"
+            json_idx = f"{json_suffix}-idx"
+            json_ix = f"{json_suffix}-ix"
             logger.info(
                 f"Creating ONLY JSON vertical resources: ds={json_ds} idx={json_idx} container={json_container or container or self.config.az_container}"
             )
@@ -603,10 +609,10 @@ class AzureSearchIntegratedVectorization:
                 "json": {"dataSource": json_ds, "index": json_idx, "skillset": json_ss, "indexer": json_ix}
             }
 
-        ds_name = data_source_name or f"ds-{safe}"
-        ss_name = skillset_name or f"ss-{safe}"
-        idx_name = index_name or f"idx-{safe}"
-        ix_name = indexer_name or f"ix-{safe}"
+        ds_name = data_source_name or f"{safe}-ds"
+        ss_name = skillset_name or f"{safe}-ss"
+        idx_name = index_name or f"{safe}-idx"
+        ix_name = indexer_name or f"{safe}-ix"
 
         logger.info("Creating/Updating vertical resources with settings: "
                     f"prefix={safe} ds={ds_name} ss={ss_name} idx={idx_name} ix={ix_name} container={container or self.config.az_container}")
@@ -622,10 +628,10 @@ class AzureSearchIntegratedVectorization:
         json_resources = None
         if create_json_vertical:
             json_suffix = f"{safe}-json"
-            json_ds = f"ds-{json_suffix}"  # reuse same container
-            json_ss = f"ss-{json_suffix}"
-            json_idx = f"idx-{json_suffix}"
-            json_ix = f"ix-{json_suffix}"
+            json_ds = f"{json_suffix}-ds"  # reuse same container
+            json_ss = f"{json_suffix}-ss"
+            json_idx = f"{json_suffix}-idx"
+            json_ix = f"{json_suffix}-ix"
             logger.info(f"Creating JSON vertical (suffix -json) resources: ds={json_ds} idx={json_idx} container={json_container or container or self.config.az_container}")
             # Allow different container for JSON vertical
             self.create_data_source(json_ds, container=json_container or container)

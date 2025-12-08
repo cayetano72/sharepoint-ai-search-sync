@@ -387,7 +387,7 @@ def create_vertical(prefix, container, json_container, ds_name, ss_name, idx_nam
     """Create or update an integrated vectorization vertical with customizable names.
 
     If explicit names are not provided they are derived from prefix:
-      ds-{prefix}, ss-{prefix}, idx-{prefix}, ix-{prefix}
+      {prefix}-ds, {prefix}-ss, {prefix}-idx, {prefix}-ix
     """
     logger.info(f"Creating vertical with prefix='{prefix}' container='{container}' explicit names ds={ds_name} ss={ss_name} idx={idx_name} ix={ix_name}")
     try:
