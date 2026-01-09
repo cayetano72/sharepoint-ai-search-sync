@@ -18,7 +18,6 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 if PROJECT_ROOT not in sys.path:
     sys.path.append(PROJECT_ROOT)
 
-from src.sharepoint_sync import SharePointSync, SharePointSyncError
 from src.azure_search_setup import AzureSearchSetup, SearchSetupError
 from src.azure_search_integrated_vectorization import AzureSearchIntegratedVectorization
 from config.settings import config
